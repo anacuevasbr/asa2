@@ -7,22 +7,24 @@
 	li $s2, 0
 	jal tree_node_create
 	move $s0, $v0 #guarda la raiz del arbol en s0
+	move $a0, $s0
 	
 	#leer num
 read:	
 	li $v0, 5
 	syscall
 	move $s1, $v0
-	beqz $s1, exitread
+	move $a0, $s0
+	beqz $s1, tree_print
+	move $a0, $s0
 	jal tree_insert
 	b read
 
-exitread:
-	move $a0, $s0
-	jal tree_print
-	li $v0, 10
- 	syscall  
-	
+#exitread:
+#	jal tree_print
+#	li $v0, 10
+# 	syscall  
+
 tree_print:
 
 	#pila
@@ -45,14 +47,14 @@ tree_print:
 	move $a0, $t3
 	bnez $t3, next #check right
 	move $a0, $t1 #print node
-	li $v0, 1
-	syscall
 	
 	
+	addiu $sp, $sp, 32 # deshacer pila
 	lw $ra, 20($sp)
 	jr $ra
 	
-next:	jal tree_print	
+next:	
+	jal tree_print	
 	
 	
 	
@@ -80,17 +82,50 @@ tree_insert:
 	sw $ra, 20($sp) # Save return address
 	sw $fp, 16($sp) # Save frame pointer
 	addiu $fp, $sp, 28
+	sw $a0, 0($fp)
+	
+	
 
 comparar:
-	lw $t1, 0($s0)
+	lw $t1, 0($a0)
 	beq $s1, $t1, exitinsert
-	
-	move $a0, $v0
-	jal tree_node_create
-	
-	
-	
 	#ver en que rama va
+	blt $s1, $t1, izquierda
+	blt $t1, $s1, derecha	
+	
+izquierda:
+	
+	lw $t2, 4($a0)
+	beqz $t2, nuevoiz
+	move $a0, $t2
+	jal tree_insert
+	addiu $sp, $sp, 32 # deshacer pila
+	lw $ra, 20($sp)
+	jr $ra
+
+derecha:
+	
+	lw $t2, 8($a0)
+	beqz $t2, nuevoder
+	move $a0, $t2
+	jal tree_insert
+	addiu $sp, $sp, 32 # deshacer pila
+	lw $ra, 20($sp)
+	jr $ra
+
+nuevoiz:  jal tree_node_create
+	lw $a0, 0($fp)
+	sw $v0, 4($a0) 
+	
+	lw $ra, 20($sp)
+	jr $ra
+
+nuevoder:  jal tree_node_create
+	lw $a0, 0($fp)
+	sw $v0, 8($a0) 
+	
+	lw $ra, 20($sp)
+	jr $ra
 	
 exitinsert:
 	lw $ra, 20($sp)
