@@ -92,12 +92,40 @@ insert_in_order:
 	
 	bgt $a1, $t0, caso1
 	
+	#si no insertamos al principio hay que recorrer la lista
+	move $t1, $a0
+
+bucle_insert:
+	lw $t2, 4($t1)
+	
+	beqz $t2, caso2 #si el siguiente es null (final de lista)
+	
+	lw $t3, 0($t2)
+	
+	bgt $a1, $t3, caso3 # si el siguiente existe pero es más pequeño
+	
+	#condición de bucle
+	move $t1, $t2
+	b bucle_insert
+	
 caso1: 
 	sw $a0, 4($v0)
+	b fin_insert
 	
+caso2:
+	sw $v0, 4($t1)
 	
-	
-	#recuperamos y deshacemos pila
+	#retornar
+	li $v0, 0
+	b fin_insert
+
+caso3:
+	sw $t2, 4($v0)
+	sw $v0, 4($t1)
+	#retornar
+	li $v0, 0
+		
+fin_insert:	#recuperamos y deshacemos pila
 	
 	lw $ra, 20($sp)
 	lw $fp, 16($sp)
@@ -129,6 +157,11 @@ print_rec:
 	lw $a0, 0($fp)
 	lw $a0, 0($a0)
 	li $v0, 1
+	syscall
+	
+	#imprimir /n
+	li $v0,11
+	li $a0,'\n'
 	syscall
 	
 	lw $a0, 0($fp)
